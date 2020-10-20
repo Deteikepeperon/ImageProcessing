@@ -1,5 +1,6 @@
+#include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
+
 
 typedef struct {
   unsigned char red;
@@ -8,58 +9,123 @@ typedef struct {
 } RGB;
 
 
-
 int main(int argc, char *argv[]) {
   int i;
-  int width, height, gradation;
-  char* c;
-  char head[128];
-  RGB rgb[256][256];
+  int width, height, bright;
+  char firstline[100];
+  char secondline[100];
+  RGB rgb[65536];
+  unsigned char gray[65536];
 
 
-  /********************************/
-  /*** 画像データの読み込み(ヘッダ部) ***/
+  // 画像ファイルの読み込み
+  FILE* fp = fopen(argv[1], "rb");            // 実行時に第一引数として指定 (./hw01 pepper.ppm)
 
-  //? ファイルは実行時に第一引数として指定したい(argv[1]?)
-  FILE *fp = fopen("./pepper.ppm", "rb");    // 画像ファイルの読み込み
-
-  //? コメントは形式と画素の間以外にも書かれる可能性がある
-  //! EOFチェックをしていないので無限ループになる可能性あり
-  do {                                       // ヘッダ部の先頭に数字が読み込まれるまでループ(形式とコメントをスキップする)
-    fgets(head, 256, fp);
-  } while (head[0] < '0' || head[0] > '9');
-
-  /*
-  strtol(変換対象の文字列, 変換終了した位置, 基数)
-  */
-  width = strtol(head, &c, 10);              // 見つかった先頭の2つの値(画素)を10進数の数値として読み込む(横×縦ピクセル)
-  height = strtol(c, NULL, 10);
-
-  fgets(head, 256, fp);                      // 最大階調値を取得するために1行ファイルから読み込む
-  gradation = strtol(head, &c, 10);          // 最大階調数を10進数の数値として読み込む
-
-
-  /********************************/
-  /*** 画像データの読み込み(データ部) ***/
-
-  for (i = 0; i < 128; i++) {
-    /*
-    fread(データ格納用配列, 1回に読み込むサイズ(バイト数), 読み込む回数, 読み込むファイルポインタ)
-    */
-    fread(rgb, sizeof(RGB), 256 * 256, fp);
+  if (fp == NULL) {
+    printf("ファイル %s を開けません.\n", argv[1]);
+    return 0;
   }
+
+  if (argc < 2) {
+    printf("引数が足りません.\n");
+    return 1;
+  }
+  else if (argc > 2) {
+    printf("指定できる画像ファイルは1つです．\n");
+    return 1;
+  }
+  assert(argc == 2);
+
+
+  // ヘッダ部の読み込み
+  fgets(firstline, sizeof(firstline), fp);    // 形式を読み飛ばす
+  fgets(secondline, sizeof(secondline), fp);  // コメントを呼び飛ばす
+
+  fscanf(fp, "%d", &width);                   // 画素を取得
+  fscanf(fp, "%d", &height);
+  fscanf(fp, "%d", &bright);                  // 最大階調値を取得
+
+
+  // データ部の読み込み
+  fread(rgb, sizeof(RGB), width*height, fp);  // まとめて配列に読み込む
   fclose(fp);
 
 
-  /*********************/
-  /*** 画像データの処理 ***/
-  
+
+  // カラー画像の赤だけを取り出して出力
+  for (i = 0; i < width*height; i++) {
+    gray[i] = rgb[i].red;
+  }
+
+  fp = fopen("red.ppm", "wb");
+
+  fprintf(fp, "P5\n");
+  fprintf(fp, "# Created by IrfanView\n");
+  fprintf(fp, "%d %d\n", width, height);
+  fprintf(fp, "%d\n", bright);
+  fwrite(gray, sizeof(gray[0]), sizeof(gray) / sizeof(gray[0]), fp);
+  fclose(fp);
 
 
+  // カラー画像の緑だけを取り出して出力
+  for (i = 0; i < width*height; i++) {
+    gray[i] = rgb[i].green;
+  }
 
-  /************************/
-  /*** 画像データの書き出し ***/
+  fp = fopen("green.ppm", "wb");
+
+  fprintf(fp, "P5\n");
+  fprintf(fp, "# Created by IrfanView\n");
+  fprintf(fp, "%d %d\n", width, height);
+  fprintf(fp, "%d\n", bright);
+  fwrite(gray, sizeof(gray[0]), sizeof(gray) / sizeof(gray[0]), fp);
+  fclose(fp);
+
+
+  // カラー画像の青だけを取り出して出力
+  for (i = 0; i < width*height; i++) {
+    gray[i] = rgb[i].blue;
+  }
+
+  fp = fopen("blue.ppm", "wb");
+
+  fprintf(fp, "P5\n");
+  fprintf(fp, "# Created by IrfanView\n");
+  fprintf(fp, "%d %d\n", width, height);
+  fprintf(fp, "%d\n", bright);
+  fwrite(gray, sizeof(gray[0]), sizeof(gray) / sizeof(gray[0]), fp);
+  fclose(fp);
+
+
+  // RGBの平均を求めて出力
+  for (i = 0; i < width*height; i++) {
+    gray[i] = (rgb[i].red + rgb[i].green + rgb[i].blue) / 3;
+  }
+
+  fp = fopen("avarage.ppm", "wb");
+
+  fprintf(fp, "P5\n");
+  fprintf(fp, "# Created by IrfanView\n");
+  fprintf(fp, "%d %d\n", width, height);
+  fprintf(fp, "%d\n", bright);
+  fwrite(gray, sizeof(gray[0]), sizeof(gray) / sizeof(gray[0]), fp);
+  fclose(fp);
+
+
+  // 輝度Yを求めて出力
+  for (i = 0; i < width*height; i++) {
+    gray[i] = rgb[i].red * 0.299 + rgb[i].green * 0.587 + rgb[i].blue * 0.114;
+  }
+
+  fp = fopen("bright.ppm", "wb");
+
+  fprintf(fp, "P5\n");
+  fprintf(fp, "# Created by IrfanView\n");
+  fprintf(fp, "%d %d\n", width, height);
+  fprintf(fp, "%d\n", bright);
+  fwrite(gray, sizeof(gray[0]), sizeof(gray) / sizeof(gray[0]), fp);
+  fclose(fp);
 
   return 0;
-}
 
+}
