@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
 
 
   // アフィン変換による回転
-  int move_x = 127;                   // 回転させた画像全体を表示させるための平行移動
-  int move_y = 0;
+  int move_x = 40;                   // 回転させた画像全体を表示させるための平行移動
+  int move_y = 280;
   int deg = 30;                       // 回転角度
   double radian = deg * (PAI / 180);  // 角度をラジアンに変換
 
