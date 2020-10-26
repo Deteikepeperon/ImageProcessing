@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
 
 
   // アフィン変換による回転
-  int move_x = 40;                   // 回転させた画像全体を表示させるための平行移動
-  int move_y = 280;
+  int move_x = 0;                     // 回転させた画像全体を表示させるための平行移動
+  int move_y = 128;
   int deg = 30;                       // 回転角度
   double radian = deg * (PAI / 180);  // 角度をラジアンに変換
 
@@ -130,18 +130,18 @@ int main(int argc, char *argv[]) {
     for (y = 0; y < height; y++) {
       // 回転
       /*
-        convert_x = cos30° * x - sin30° * y
-        convert_y = sin30° * x + cos30° * y
+        convert_x1 = cos30° * x + sin30° * y
+        convert_y1 = -sin30° * x + cos30° * y
       */
-      convert_x1 = (cos(deg) * x) + ((-1) * sin(deg) * y);
-      convert_y1 = (sin(deg) * x) + (cos(deg) * y);
+      convert_x1 = (cos(radian) * x) + (sin(radian) * y);
+      convert_y1 = (cos(radian) * y) - (sin(radian) * x);
 
       // 平行移動
       convert_x2 =  convert_x1 + move_x;
       convert_y2 =  convert_y1 + move_y;
 
       // アフィン変換後の座標に代入
-      rotation[convert_x2][convert_y2].data = gray[x][y].data;
+      rotation[convert_y2][convert_x2].data = gray[y][x].data;
     }
   }
 
