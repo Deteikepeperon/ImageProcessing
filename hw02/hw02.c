@@ -102,14 +102,14 @@ int main(int argc, char *argv[]) {
 
   for (y = 0; y < height; y++) {
     // 計算対象不足の下端の近似値を計算(2×2画素)
-    enlarge[(height - 1) * 2][ex].data     =  gray[height - 1][y].data;
-    enlarge[height * 2][ex].data           = (gray[height][y].data +
+    enlarge[(height - 1) * 2][ey].data     =  gray[height - 1][y].data;
+    enlarge[height * 2][ey].data           = (gray[height][y].data +
                                               gray[height - 1][y].data) / 2;
-    enlarge[(height - 1) * 2][ex + 1].data = (gray[height - 1][y + 1].data +
+    enlarge[(height - 1) * 2][ey + 1].data = (gray[height - 1][y + 1].data +
                                               gray[height - 1][y].data) / 2;
-    enlarge[height * 2][ex + 1].data       = (gray[height][y + 1].data +
+    enlarge[height * 2][ey + 1].data       = (gray[height][y + 1].data +
                                               gray[height - 1][y].data) / 2;
-    ex += 2;
+    ey += 2;
   }
 
   fp = fopen("enlarge.pgm", "wb");
