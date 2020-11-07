@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 void noise_removal(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char denoise[]);
 void sharpening(FILE *fp, int width, int height, int maxdepth, unsigned char denoise[], unsigned char sharpen[]);
@@ -63,7 +62,7 @@ void noise_removal(FILE *fp, int width, int height, int maxdepth, unsigned char 
     for (int j = 0; j < height; j++) {
 
       // 隅4辺の画素は， 注目画素の座標をそのままコピー
-      if (i == 0 | i == width - 1 | j == 0 | j == height - 1)  denoise[i * height + j] = gray[i * height + j];
+      if (i == 0 || i == width - 1 || j == 0 || j == height - 1)  denoise[i * height + j] = gray[i * height + j];
 
       // 近傍画素の値を代入
       neighbor[0] = gray[(i - 1) * height + (j - 1)];
@@ -102,17 +101,14 @@ void noise_removal(FILE *fp, int width, int height, int maxdepth, unsigned char 
 // 8近傍ラプラシアンフィルタを用いた鮮鋭化 (メディアンフィルタ + 鮮鋭化)
 void sharpening(FILE *fp, int width, int height, int maxdepth, unsigned char denoise[], unsigned char sharpen[])
 {
-  int neighbor[9];          // 注目画素の近傍領域
-  int laplacian_sum = 0;    // 注目画素の合計
-
-  //? 配列の初期化？
+  int neighbor[9];      // 注目画素の近傍領域
 
 
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
 
       // 隅4辺の画素は， 注目画素の座標をそのままコピー
-      if (i == 0 | i == width - 1 | j == 0 | j == height - 1)  sharpen[i * height + j] = denoise[i * height + j];
+      if (i == 0 || i == width - 1 || j == 0 || j == height - 1)  sharpen[i * height + j] = denoise[i * height + j];
 
       // 近傍画素の値を代入
       neighbor[0] = denoise[(i - 1) * height + (j - 1)];
@@ -125,19 +121,16 @@ void sharpening(FILE *fp, int width, int height, int maxdepth, unsigned char den
       neighbor[7] = denoise[(i + 1) * height + (j    )];
       neighbor[8] = denoise[(i + 1) * height + (j + 1)];
 
+      int laplacian_sum = 0;    // 注目画素の合計
+
       // 8近傍ラプラシアンを掛けた注目画素の値を合計
-      for (int k = 0; k < 9; k++) {
-        laplacian_sum += neighbor[k];
-      }
+      for (int k = 0; k < 9; k++)  laplacian_sum += neighbor[k];
 
       // フィルタ処理後の値(0以下は0に， 255以上は255にする)
-      sharpen[i * height + j] = denoise[i * height + j] - laplacian_sum;
+      if ((denoise[i * height + j] - laplacian_sum) <= 0)    sharpen[i * height + j] = 0;
+      if ((denoise[i * height + j] - laplacian_sum) >= 255)  sharpen[i * height + j] = 255;
 
-      if ((denoise[i * height + j] - laplacian_sum) <= 0) {
-        sharpen[i * height + j] = 0;
-      } else if ((denoise[i * height + j] - laplacian_sum) >= 255) {
-        sharpen[i * height + j] = 255;
-      }
+      sharpen[i * height + j] = denoise[i * height + j] - laplacian_sum;
     }
   }
 
