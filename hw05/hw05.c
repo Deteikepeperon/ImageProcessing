@@ -55,9 +55,7 @@ int main(int argc, char *argv[])
 // 固定しきい値による二値化（しきい値：128）
 void binarization(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[])
 {
-  for (int i = 0; i < width * height; i++) {
-    binariz[i] =  (gray[i] >= 128) ? 255 : 0;
-  }
+  for (int i = 0; i < width * height; i++)  binariz[i] = (gray[i] >= 128) ? 255 : 0;
 
   fp = fopen("binarization.pgm", "wb");
   fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width, height, maxdepth);
