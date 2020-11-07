@@ -9,46 +9,32 @@ typedef struct {
 } GRAY;
 
 
-int main(int argc, char *argv[]) {
-  int x, y;
-  int width, height, bright, img_size;
-  char firstline[100], secondline[100];
+int main(int argc, char *argv[])
+{
+  FILE *fp;                       // ファイル構造体のポインタ変数
+  int width, height, maxdepth;    // 幅， 高さ， 最大階調値
+  char buf[64];                   // 形式とコメントの読み飛ばし用
+  GRAY gray[256][256],            // グレイスケール画像データ
+       shrink[128][128],          // 縮小画像データ
+       enlarge[512][512],         // 拡大画像データ
+       rotation[350][350];        // 回転画像データ
 
-  GRAY gray[256][256];
-  GRAY shrink[128][128];
-  GRAY enlarge[512][512];
-  GRAY rotation[350][350];
 
+  if ((fp = fopen(argv[1], "rb")) == NULL)  goto FILE_ERR;
+  if (argc != 2)                            goto ARGUMENT_ERR;
 
-  // 画像ファイルの読み込み
-  FILE* fp = fopen(argv[1], "rb");
+  fgets(buf, sizeof(buf), fp);
+  fgets(buf, sizeof(buf), fp);
+  fscanf(fp, "%d %d\n %d\n", &width, &height, &maxdepth);
 
-  if (fp == NULL) {
-    printf("ファイル %s を開けません.\n", argv[1]);
-    exit(1);
-  } else if (argc < 2) {
-    printf("引数が足りません.\n");
-    exit(1);
-  } else if (argc > 2) {
-    printf("指定できる画像ファイルは1つです．\n");
-    exit(1);
-  }
-
-  // ヘッダ部の読み込み
-  fgets(firstline, sizeof(firstline), fp);                // 形式を読み飛ばす
-  fgets(secondline, sizeof(secondline), fp);              // コメントを呼び飛ばす
-  fscanf(fp, "%d %d\n %d\n", &width, &height, &bright);   // 画素, 最大階調値を取得
-
-  // データ部の読み込み
-  img_size = width * height;
-  fread(gray, sizeof(GRAY), img_size, fp);
+  fread(gray, sizeof(GRAY), width * height, fp);
 
 
   // 平均操作法による縮小
   unsigned int sx, sy;
 
-  for (x = 0; x < width; x += 2) {
-    for (y = 0; y < height; y += 2) {
+  for (int x = 0; x < width; x += 2) {
+    for (int y = 0; y < height; y += 2) {
       // 濃度平均を計算(2×2画素)
       shrink[sx][sy].data = (gray[x][y].data +
                              gray[x][y + 1].data +
@@ -61,15 +47,15 @@ int main(int argc, char *argv[]) {
   }
 
   fp = fopen("shrink.pgm", "wb");
-  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width / 2, height / 2, bright);
-  fwrite(shrink, sizeof(GRAY), img_size / 4, fp);
+  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width / 2, height / 2, maxdepth);
+  fwrite(shrink, sizeof(GRAY), width * height / 4, fp);
 
 
   // 直線補間法による拡大
   unsigned int ex, ey;
 
-  for (x = 0; x < width; x++) {
-    for (y = 0; y < height; y++) {
+  for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
       // 隣接画素の近似値を計算(2×2画素)
       enlarge[ex][ey].data         =  gray[x][y].data;
       enlarge[ex][ey + 1].data     = (gray[x][y].data +
@@ -86,7 +72,7 @@ int main(int argc, char *argv[]) {
 
   ex = 0;
 
-  for (x = 0; x < width; x++) {
+  for (int x = 0; x < width; x++) {
     // 計算対象不足の右端の近似値を計算(2×2画素)
     enlarge[ex][(width - 1) * 2].data     =  gray[x][width - 1].data;
     enlarge[ex][width * 2].data           = (gray[x][width].data +
@@ -100,7 +86,7 @@ int main(int argc, char *argv[]) {
 
   ex = 0;
 
-  for (y = 0; y < height; y++) {
+  for (int y = 0; y < height; y++) {
     // 計算対象不足の下端の近似値を計算(2×2画素)
     enlarge[(height - 1) * 2][ey].data     =  gray[height - 1][y].data;
     enlarge[height * 2][ey].data           = (gray[height][y].data +
@@ -113,8 +99,8 @@ int main(int argc, char *argv[]) {
   }
 
   fp = fopen("enlarge.pgm", "wb");
-  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width * 2, height * 2, bright);
-  fwrite(enlarge, sizeof(GRAY), img_size * 4, fp);
+  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width * 2, height * 2, maxdepth);
+  fwrite(enlarge, sizeof(GRAY), width * height * 4, fp);
 
 
   // アフィン変換による回転
@@ -126,8 +112,8 @@ int main(int argc, char *argv[]) {
   int convert_x1, convert_y1,         // 変換後の座標
       convert_x2, convert_y2;
 
-  for (x = 0; x < width; x++) {
-    for (y = 0; y < height; y++) {
+  for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
       // 回転
       /*
         convert_x1 = cos30° * x + sin30° * y
@@ -146,11 +132,20 @@ int main(int argc, char *argv[]) {
   }
 
   fp = fopen("rotation.pgm", "wb");
-  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", 350, 350, bright);
+  fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", 350, 350, maxdepth);
   fwrite(rotation, sizeof(GRAY), 350 * 350, fp);
 
 
   fclose(fp);
 
   return 0;
+
+
+  FILE_ERR:
+    printf("ファイルを開けません．\n");
+    exit(1);
+
+  ARGUMENT_ERR:
+    printf("コマンドライン引数の数は1つにしてください．\n");
+    exit(1);
 }
