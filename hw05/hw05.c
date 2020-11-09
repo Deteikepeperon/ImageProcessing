@@ -3,7 +3,7 @@
 #include <string.h>
 
 void fixed_threshold(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[]);
-void discriminant_analysis(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[]);
+void concentration_average(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[]);
 void ordered_dither(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char dither[]);
 
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   fread(gray, sizeof(unsigned char), width * height, fp);
 
   fixed_threshold(fp, width, height, maxdepth, gray, binariz);
-  discriminant_analysis(fp, width, height, maxdepth, gray, binariz);
+  concentration_average(fp, width, height, maxdepth, gray, binariz);
   ordered_dither(fp, width, height, maxdepth, gray, dither);
 
   free(gray);
@@ -60,58 +60,34 @@ void fixed_threshold(FILE *fp, int width, int height, int maxdepth, unsigned cha
 {
   for (int i = 0; i < width * height; i++)  binariz[i] = (gray[i] >= 128) ? 255 : 0;
 
-  fp = fopen("binarization_01.pgm", "wb");
+  fp = fopen("fixed_binariz.pgm", "wb");
   fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width, height, maxdepth);
   fwrite(binariz, sizeof(unsigned char), width * height, fp);
 }
 
 
-// 判別分析法による二値化（統計処理によりしきい値を決定）
-void discriminant_analysis(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[])
+// 濃度の平均値をしきい値とした二値化
+void concentration_average(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char binariz[])
 {
+  int hist[256];
+  int sum = 0, average = 0;
+  memset(hist, 0, sizeof(hist));
   memset(binariz, 0, sizeof(unsigned char));
 
   // 輝度値集計
-  int hist[256];
-  memset(hist, 0, sizeof(hist));
-
   for (int i = 0; i < width * height; i++)  hist[gray[i]]++;
 
-
-  // 判別分析法
-  int t = 0;                      // しきい値
-  double sb2_max = 0;             // w1 * w2 * (m1 - m2)^2 の最大値
-
-  // 画素数の割合・平均を求める
+  // 濃度の平均値を求める
   for (int i = 0; i <= maxdepth; i++) {
-    int w1 = 0, w2 = 0;           // 各クラスの画素数
-    long sum1 = 0, sum2 = 0;      // 各クラスの合計値
-    double m1 = 0.0, m2 = 0.0;    // 各クラスの平均値
-
-    for (int j = 0; j <= i; j++) {
-      w1 += hist[j];
-      sum1 += j * hist[j];
-    }
-
-    for (int j = i + 1; j < 256; j++) {
-      w2 += hist[j];
-      sum2 += j * hist[j];
-    }
-
-    m1 = (w1 != 0) ? (double)sum1 / w1 : 0;
-    m2 = (w2 != 0) ? (double)sum2 / w2 : 0;
-
-    double sb2 = ((double)w1 * w2 * (m1 - m2) * (m1 - m2));
-
-    if (sb2 > sb2_max) {
-      sb2_max = sb2;
-      t = i;
-    }
-
-    for (int i = 0; i < width * height; i++)  binariz[i] = (hist[i] < t) ? 0 : 255;
+    sum += i * hist[i];
+    average = sum / (width * height);
   }
+  printf("濃度の平均値：%d\n", average);
 
-  fp = fopen("binarization_02.pgm", "wb");
+
+  for (int i = 0; i < width * height; i++)  binariz[i] = (gray[i] >= average) ? 255 : 0;
+
+  fp = fopen("average_binariz.pgm", "wb");
   fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width, height, maxdepth);
   fwrite(binariz, sizeof(unsigned char), width * height, fp);
 }
