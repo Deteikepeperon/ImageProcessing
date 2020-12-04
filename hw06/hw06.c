@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   FILE *fp;                                   // ファイル構造体のポインタ変数
   int width, height, maxdepth;                // 幅， 高さ， 最大階調値
   char buf[64];                               // 形式とコメントの読み飛ばし用
-  unsigned char *gray, *sobel, *laplatian;    // グレイスケール画像データ， Sobel画像データ, laplatian画像データ
+  unsigned char *gray, *sobel, *laplatian;    // グレイスケール画像データ， Sobel画像データ, Laplatian画像データ
 
 
   if ((fp = fopen(argv[1], "rb")) == NULL)  goto FILE_ERR;
@@ -129,9 +129,7 @@ void laplatian_filter(FILE *fp, int width, int height, int maxdepth, unsigned ch
       neighbor[7] = gray[(i + 1) * height + (j    )];
       neighbor[8] = gray[(i + 1) * height + (j + 1)];
 
-      for (int k = 0; k < 9; k++) {
-        dataSum += neighbor[k] * karnel[k];
-      }
+      for (int k = 0; k < 9; k++)  dataSum += neighbor[k] * karnel[k];
       dataSum = abs(dataSum);
 
       if (dataSum > 255)  dataSum = 255;
