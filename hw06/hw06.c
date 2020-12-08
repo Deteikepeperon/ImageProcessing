@@ -96,6 +96,16 @@ void sobel_filter(FILE *fp, int width, int height, int maxdepth, unsigned char g
 
       sobel[(i - 1) * height + (j - 1)] = dataSum;
     }
+
+    // ミラーリング
+    for (int i = 0; i < width; i++) {
+      if (i == 0)          sobel[i] = sobel[i + width + 1];
+      if (i == width - 1)  sobel[i] = sobel[i + width - 1];
+      else                 sobel[i] = sobel[i + width];
+    }
+    for (int j = 0; j < height; j++) {
+      sobel[j * width] = sobel[j * width + 1];
+    }
   }
 
   fp = fopen("sobel.pgm", "wb");
@@ -136,6 +146,16 @@ void laplatian_filter(FILE *fp, int width, int height, int maxdepth, unsigned ch
 
       laplatian[(i - 1) * height + (j - 1)] = dataSum;
     }
+  }
+
+  // ミラーリング
+  for (int i = 0; i < width; i++) {
+    if (i == 0)          laplatian[i] = laplatian[i + width + 1];
+    if (i == width - 1)  laplatian[i] = laplatian[i + width - 1];
+    else                 laplatian[i] = laplatian[i + width];
+  }
+  for (int j = 0; j < height; j++) {
+    laplatian[j * width] = laplatian[j * width + 1];
   }
 
   fp = fopen("laplatian.pgm", "wb");
