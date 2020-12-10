@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 void quantization(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char quantized[]);
+void calcPSNR(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char quantized[]);
 
 
 int main(int argc, char *argv[])
@@ -24,6 +26,7 @@ int main(int argc, char *argv[])
 
   fread(gray, sizeof(unsigned char), width * height, fp);
   quantization(fp, width, height, maxdepth, gray, quantized);
+  calcPSNR(fp, width, height, maxdepth, gray, quantized);
 
   free(gray);
   free(quantized);
@@ -50,9 +53,37 @@ int main(int argc, char *argv[])
 // 8[bit/pix]の画像を4[bit/pix]にする線形量子化プログラム
 void quantization(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char quantized[])
 {
-  for (int i = 0; i < width * height; i++)  quantized[i] = (gray[i] / 16) * 16;
+  for (int i = 0; i < width * height; i++) {
+    if (gray[i] / 16 == 0)  quantized[i] = 0;
+    if (gray[i] / 16 == 15) quantized[i] = 255;
+
+    quantized[i] = (gray[i] / 16) * 16;
+  }
+
 
   fp = fopen("quantized.pgm", "wb");
   fprintf(fp, "P5\n# Grayscale image\n%d %d\n%d\n", width, height, maxdepth);
   fwrite(quantized, sizeof(unsigned char), width * height, fp);
+}
+
+
+// PSNR値の計算
+void calcPSNR(FILE *fp, int width, int height, int maxdepth, unsigned char gray[], unsigned char quantized[])
+{
+  double MSE;     // 平均二乗誤差 「((元画像の輝度 - 変換後の輝度) ^ 2)の総和 / 画素数」
+  double PSNR;    // 変換後の画像がどれ位劣化したかを評価する指標 「10 * log_10 (MAX ^ 2 / MSE)」
+  double diff, sum = 0.0;
+
+
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      diff = gray[i * height + j] - quantized[i * height + j];
+      sum += pow(diff, 2.0);
+    }
+  }
+
+  MSE = sum / (width * height);
+  PSNR = 10.0 * log10(maxdepth * maxdepth / MSE);
+
+  printf("\nPSNR値：%f\n", PSNR);
 }
