@@ -48,3 +48,11 @@
 - Bayerマトリクスを用いて，グレイスケール画像からディザ画像を生成するプログラムを作成せよ．
 
 [二値化・階調変換・ディザ](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw05)
+
+<br>
+
+## フィルタ処理
+
+- P5 形式グレイスケールに変換した画像「Lenna」と画像「Airplane」に対して，SobelフィルタとLaplacianフィルタをそれぞれ適用したときの出力画像はどのような結果となるか．なお，Sobelフィルタについては，√((水平方向 * 2) + (垂直方向 * 2))として画素値を求めること．また，Laplacianフィルタについては，負の値が出ないよう，画素値の絶対値をとったものを出力画像とすること．
+
+[フィルタ処理](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw06)
