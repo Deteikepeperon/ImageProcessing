@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 typedef struct {
   unsigned char r;
@@ -101,11 +102,13 @@ void rgb2hsv(RGB rgb, HSV hsv[])
   }
 
   // Hue（色相）
-  if (max == R)      hsv->h  = 60.0 * ((G - B) / (max - min));
-  if (max == G)      hsv->h  = 60.0 * ((R - B) / (max - min)) + 120.0;
-  if (max == B)      hsv->h  = 60.0 * ((R - G) / (max - min)) + 240.0;
-  if (hsv->h < 0.0)  hsv->h += 360.0;
-  if (max == min)    NULL;
+  if (max == min)      hsv->h  = DBL_MAX;
+  else if (max == R)   hsv->h  = 60.0 * ((G - B) / (max - min));
+  else if (max == G)   hsv->h  = 60.0 * ((R - B) / (max - min)) + 120.0;
+  else if (max == B)   hsv->h  = 60.0 * ((R - G) / (max - min)) + 240.0;
+
+  if (hsv->h < 0.0)    hsv->h += 360.0;
+  if (hsv->h > 360.0)  hsv->h -= 360.0;
 
   // Saturation（彩度）
   if (max == 0.0)    hsv->s = 0.0;
@@ -120,8 +123,6 @@ void rgb2hsv(RGB rgb, HSV hsv[])
 void hsv2rgb(HSV hsv, RGB rgb[])
 {
   double R, G, B, HH, f, p, q, t;
-  int i = (int)HH;
-
 
   HH = ((int)hsv.h / 60) % 6;
   f = hsv.h / 60.0 - HH;
@@ -129,6 +130,7 @@ void hsv2rgb(HSV hsv, RGB rgb[])
   q = hsv.v * (1.0 - hsv.s * f);
   t = hsv.v * (1.0 - (1.0 - f) * hsv.s);
 
+  int i = (int)HH;
   R = G = B = hsv.v;
 
   switch (i) {
