@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 typedef struct {
   unsigned char r;
@@ -16,7 +15,7 @@ typedef struct {
 
 void rgb2hsv(RGB rgb, HSV hsv[]);
 void hsv2rgb(HSV hsv, RGB rgb[]);
-void manipulate_HSV(RGB rgb[], HSV hsv[], unsigned char gray[], int width, int height, int maxdepth);
+void manipulate_HSV(FILE *fp, RGB rgb[], HSV hsv[], unsigned char gray[], int width, int height, int maxdepth);
 
 
 int main(int argc, char *argv[])
@@ -50,7 +49,7 @@ int main(int argc, char *argv[])
 
   fread(gray, sizeof(unsigned char), width * height, fp2);
 
-  manipulate_HSV(rgb, hsv, gray, width, height, maxdepth);
+  manipulate_HSV(fp, rgb, hsv, gray, width, height, maxdepth);
 
   free(rgb);
   free(hsv);
@@ -79,16 +78,13 @@ int main(int argc, char *argv[])
 // RGBの各値からHSVを求める
 void rgb2hsv(RGB rgb, HSV hsv[])
 {
-  double R, G, B, H, S, V, max, min;
+  double R, G, B, max, min;
+
 
   // 最小値を0.0，最大値を1.0とする（255分率）
-  R = rgb.r / 255.0;
-  G = rgb.g / 255.0;
-  B = rgb.b / 255.0;
-
-  H = hsv->h;
-  S = hsv->s;
-  V = hsv->v;
+  R = (double)rgb.r / 255.0;
+  G = (double)rgb.g / 255.0;
+  B = (double)rgb.b / 255.0;
 
   // 最大値・最小値
   if (R >= G && R >= B) {
@@ -105,80 +101,73 @@ void rgb2hsv(RGB rgb, HSV hsv[])
   }
 
   // Hue（色相）
-  if (max == R)    H  = 60.0 * ((G - B) / (max - min));
-  if (max == G)    H  = 60.0 * ((R - B) / (max - min)) + 120.0;
-  if (max == B)    H  = 60.0 * ((R - G) / (max - min)) + 240.0;
-  if (H < 0.0)     H += 360.0;
-  if (max == min)  NULL;
+  if (max == R)      hsv->h  = 60.0 * ((G - B) / (max - min));
+  if (max == G)      hsv->h  = 60.0 * ((R - B) / (max - min)) + 120.0;
+  if (max == B)      hsv->h  = 60.0 * ((R - G) / (max - min)) + 240.0;
+  if (hsv->h < 0.0)  hsv->h += 360.0;
+  if (max == min)    NULL;
 
   // Saturation（彩度）
-  if (max == 0)    S = 0;
-  if (max != 0)    S = (max - min) / max;
+  if (max == 0.0)    hsv->s = 0.0;
+  if (max != 0.0)    hsv->s = (max - min) / max;
 
   // Value（明度）
-  V = max;
+  hsv->v = max;
 }
 
 
 // 顕色（HSVからRGBへ変換）
 void hsv2rgb(HSV hsv, RGB rgb[])
 {
-  double H, S, V, R, G, B, HH, f, p, q, t, r, g, b;
+  double R, G, B, HH, f, p, q, t;
   int i = (int)HH;
 
-  H = hsv.h;
-  S = hsv.s;
-  V = hsv.v;
 
-  R = rgb->r;
-  G = rgb->g;
-  B = rgb->b;
+  HH = ((int)hsv.h / 60) % 6;
+  f = hsv.h / 60.0 - HH;
+  p = hsv.v * (1.0 - hsv.s);
+  q = hsv.v * (1.0 - hsv.s * f);
+  t = hsv.v * (1.0 - (1.0 - f) * hsv.s);
 
-  HH = fmod(H / 60.0, 6.0);
-  f = H / 60.0 - HH;
-  p = V * (1.0 - S);
-  q = V * (1.0 - S * (HH - i));
-  t = V * (1.0 - (1.0 - f) * S);
-
-  r = g = b = V;
+  R = G = B = hsv.v;
 
   switch (i) {
     case 0:
-      g = t;
-      b = p;
+      G = t;
+      B = p;
       break;
     case 1:
-      r = q;
-      b = p;
+      R = q;
+      B = p;
       break;
     case 2:
-      r = p;
-      b = t;
+      R = p;
+      B = t;
       break;
     case 3:
-      r = p;
-      g = q;
+      R = p;
+      G = q;
       break;
     case 4:
-      r = t;
-      g = p;
+      R = t;
+      G = p;
       break;
     case 5:
-      g = p;
-      b = q;
+      G = p;
+      B = q;
       break;
     default:
       break;
   }
 
-  R = r * 255.0;
-  G = g * 255.0;
-  B = b * 255.0;
+  rgb->r = (unsigned char)(R * 255);
+  rgb->g = (unsigned char)(G * 255);
+  rgb->b = (unsigned char)(B * 255);
 }
 
 
 // HSVによる画質の改善
-void manipulate_HSV(RGB rgb[], HSV hsv[], unsigned char gray[], int width, int height, int maxdepth)
+void manipulate_HSV(FILE *fp, RGB rgb[], HSV hsv[], unsigned char gray[], int width, int height, int maxdepth)
 {
   for (int i = 0; i < width * height; i++) {
     rgb2hsv(rgb[i], &hsv[i]);
@@ -186,8 +175,7 @@ void manipulate_HSV(RGB rgb[], HSV hsv[], unsigned char gray[], int width, int h
     hsv2rgb(hsv[i], &rgb[i]);
   }
 
-  FILE *img = fopen("manipulateHSV.ppm", "wb");
-  fprintf(img, "P6\n# Color image\n%d %d\n%d\n", width, height, maxdepth);
-  fwrite(rgb, sizeof(RGB), width * height, img);
-  fclose(img);
+  fp = fopen("manipulateHSV.ppm", "wb");
+  fprintf(fp, "P6\n# HSV-manipulated image\n%d %d\n%d\n", width, height, maxdepth);
+  fwrite(rgb, sizeof(RGB), width * height, fp);
 }
