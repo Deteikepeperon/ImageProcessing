@@ -64,7 +64,7 @@
 - P5 形式グレイスケールに変換した画像「Lenna」と画像「Airplane」に対して，線形量子化を行うことで 4[bit/pixel] の画像を作成せよ．このとき，輝度の最大値と最小値が，元の画像と変わらないように注意する．
 - 入力画像と出力画像の間のPSNR値も求めよ．
 
-[量子化](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw07)
+[標本化と量子化](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw07)
 
 <br>
 
@@ -73,5 +73,17 @@
 - 低解像度のカラー画像と高解像度のグレースケール画像を利用して，高解像度のカラー画像を生成するプログラムを作成せよ．
 
 [HSVによる画質の改善](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw08)
+
+<br>
+
+## アフィン変換による画像の幾何学的歪みの除去
+
+- 衛星写真に含まれている歪みを（順変換で）修正し，多時期の衛星写真（幾何学的歪みを補正済のもの）とオーバーレイできるようにする．多時期の衛星画像を比較できることによって，環境モニタリングや土地利用の変化が容易になる．
+  - 補完方法：最近隣内挿法（ニアレストネイバー法）
+  - 入力画像と目的画像から基準点（同一点）を8点以上求めること．
+  - パラメータ a ～ f をExcelで求めること．
+
+[アフィン変換による画像の幾何学的歪みの除去](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw09)
+
 
 
