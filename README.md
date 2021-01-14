@@ -85,5 +85,13 @@
 
 [アフィン変換による画像の幾何学的歪みの除去](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw09)
 
+<br>
+
+## 画像ラベリング
+
+- グレースケール画像を二値化し，再帰関数でラベリング処理した結果を出力せよ．（8連結・最大ラベル数32）
+- 各ラベルが指定された画像領域において個別に色付けせよ．
+
+[画像ラベリング](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw10)
 
 
