@@ -8,7 +8,7 @@
 #define MAXDATA 500  // 最大データ数
 
 void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2);
-void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2);
+void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2, int K);
 void k_means(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2);
 void get_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row);
 void save_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row);
@@ -44,12 +44,17 @@ int main(int argc, char *argv[])
   nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2);
   save_data("converted_txt/data02_nearest.txt", coordinate2, category2, &column, &row2);
 
-  // 課題2：k-最近傍法を実装 & クラスタリング後のデータを保存
+  // 課題2：k-最近傍法を実装（k値：奇数と偶数）& クラスタリング後のデータを保存
+  k_nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2, 5);
+  k_nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2, 6);
+  save_data("converted_txt/data02_k_nearest_odd.txt", coordinate2, category2, &column, &row2);
+  save_data("converted_txt/data02_k_nearest_even.txt", coordinate2, category2, &column, &row2);
 
   // 課題3：k-平均法を実装 & クラスタリング後のデータを保存
 
   // 全てのクラスタリング結果をプロット
-  plot_data("converted_txt/data_saved.txt");
+  plot_data("converted_txt/data02_k_nearest_even.txt");
+  plot_data("converted_txt/data02_k_nearest_odd.txt");
   plot_data("converted_txt/data02_nearest.txt");
 
 
@@ -65,16 +70,17 @@ void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIME
     double y1 = coordinate2[i][1];
     double min = LLONG_MAX;  // 初期値をlong long型の最大値に設定
 
+
     for (int j = 0; j < row1; j++) {
       double x2 = coordinate1[j][0];
       double y2 = coordinate1[j][1];
 
       // 所属するクラスの中で最も近いデータのユークリッド距離を測定
-      int dist = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+      int distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 
       // 測定した距離が初期値より小さい場合，初期値を更新し，最短距離の座標をカテゴリに代入
-      if (min > dist) {
-        min = dist;
+      if (min > distance) {
+        min = distance;
         category2[i] = category1[j];
       }
     }
@@ -82,10 +88,44 @@ void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIME
 }
 
 
-// k-最近傍法（引数：分類済みデータの座標，未分類データの座標，分類済みデータのカテゴリ，未分類データのカテゴリ，分類済みデータの行数，未分類データの行数）
-void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2)
+// k-最近傍法（引数：分類済みデータの座標，未分類データの座標，分類済みデータのカテゴリ，未分類データのカテゴリ，分類済みデータの行数，未分類データの行数，インスタンス数）
+void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2, int K)
 {
+  int coord_num[row1];  // 座標番号
+  int cluster_A = 0;   // クラスタAに分類された数
+  int cluster_B = 0;   // クラスタBに分類された数
 
+
+  for (int i = 0; i < row2; i++) {
+    double x1 = coordinate2[i][0];
+    double y1 = coordinate2[i][1];
+
+    for (int j = 0; j < row1; j++) {
+      double x2 = coordinate1[j][0];
+      double y2 = coordinate1[j][1];
+
+      int distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+      coord_num[j] = j;
+    }
+
+    // ユークリッド距離をバブルソート（昇順）
+    for (int k = 0; k < row1; k++) {
+      for (int l = 0; l < row1 + 1; l++) {
+
+        if (coord_num[k] > coord_num[l]) {
+          int tmp = coord_num[k];
+          coord_num[k] = coord_num[l];
+          coord_num[l] = tmp;
+        }
+      }
+    }
+
+    // 距離が短い順に並べたK個のクラスタの数をカウント
+    for (int j = 0; j < K; j++) category1[coord_num[K]] == 1 ? cluster_A++ : cluster_B++;
+
+    // 分類された数が多い方のクラスタを採用
+    category2[i] = cluster_A > cluster_B ? cluster_A : cluster_B;
+  }
 }
 
 
@@ -173,7 +213,7 @@ void plot_data(char *filename)
   fprintf(gp, "set size ratio - 1\n");
   fprintf(gp, "set palette rgbformulae 22, 13, -31\n");
   fprintf(gp, "set pm3d map # no interpolation\n");
-  fprintf(gp, "splot \"%s\" using 1:2:3 with points palette pointsize 1 pointtype 7\n", filename);
+  fprintf(gp, "plot \"%s\" using 1:2:3 with points palette pointsize 1 pointtype 7\n", filename);
 
   fflush(gp);
   fprintf(gp, "exit\n");
