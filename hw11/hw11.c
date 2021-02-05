@@ -46,8 +46,9 @@ int main(int argc, char *argv[])
 
   // 課題2：k-最近傍法を実装（k値：奇数と偶数） & クラスタリング後のデータを保存
   k_nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2, 5);
-  k_nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2, 6);
   save_data("converted_txt/data02_k_nearest_odd.txt", coordinate2, category2, &column, &row2);
+
+  k_nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2, 6);
   save_data("converted_txt/data02_k_nearest_even.txt", coordinate2, category2, &column, &row2);
 
   // 課題3：k-平均法を実装 & クラスタリング後のデータを保存
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
 // 最近傍法（引数：分類済みデータの座標，未分類データの座標，分類済みデータのカテゴリ，未分類データのカテゴリ，分類済みデータの行数，未分類データの行数）
 void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2)
 {
-  double min = LLONG_MAX;  // 初期値をlong long型の最大値に設定
+  long long init = LLONG_MAX;  // 初期値をlong long型の最大値に設定
 
 
   for (int i = 0; i < row2; i++) {
@@ -81,8 +82,8 @@ void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIME
       double distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 
       // 測定した距離が初期値より小さい場合，初期値を更新し，最短距離をカテゴリに代入
-      if (min > distance) {
-        min = distance;
+      if (init > distance) {
+        init = distance;
         category2[i] = category1[j];
       }
     }
@@ -93,11 +94,11 @@ void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIME
 // k-最近傍法（引数：分類済みデータの座標，未分類データの座標，分類済みデータのカテゴリ，未分類データのカテゴリ，分類済みデータの行数，未分類データの行数，インスタンス数）
 void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2, int K)
 {
-  int cluster_A = 0;       // クラスタAに分類された数
-  int cluster_B = 0;       // クラスタBに分類された数
-  int instance[row1];      // 近傍に登録されたk個のインスタンス
-  double distance[row1];   // 距離
-  double min = LLONG_MAX;  // 初期値をlong long型の最大値に設定
+  int cluster_A = 0;           // クラスタAに分類された数
+  int cluster_B = 0;           // クラスタBに分類された数
+  int instance[row1];          // 近傍に登録されたK個のインスタンス
+  double distance[row1];       // データ同士の距離
+  long long init = LLONG_MAX;  // 初期値をlong long型の最大値に設定
 
 
   for (int i = 0; i < row2; i++) {
@@ -112,8 +113,8 @@ void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DI
       distance[j] = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 
       // 測定した距離が初期値より小さい場合，初期値を更新し，最短距離をカテゴリに代入
-      if (min > distance[j]) {
-        min = distance[j];
+      if (init > distance[j]) {
+        init = distance[j];
         category2[i] = category1[j];
       }
 
