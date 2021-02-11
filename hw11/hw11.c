@@ -9,7 +9,7 @@
 
 void nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2);
 void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2, int K);
-void k_means(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2);
+void k_means(double coordinate[][DIMENSION], double category[], int row, int cluster);
 void get_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row);
 void save_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row);
 void plot_data(char *filename);
@@ -30,15 +30,10 @@ int main(int argc, char *argv[])
 
 
   // 未分類データを読み込み
-  get_data("txt/data_01.txt", coordinate1, category1, &column, &row1);
-  get_data("txt/data_02.txt", coordinate2, category2, &column, &row2);
-  get_data("txt/data_03.txt", coordinate3, category3, &column, &row3);
-  get_data("txt/data_04.txt", coordinate4, category4, &column, &row4);
-
-  // クラスタリング前の未分類データを保存
-  save_data("converted_txt/data02_before.txt", coordinate2, category2, &column, &row2);
-  save_data("converted_txt/data03_before.txt", coordinate3, category3, &column, &row3);
-  save_data("converted_txt/data04_before.txt", coordinate4, category4, &column, &row4);
+  get_data("txt/data01.txt", coordinate1, category1, &column, &row1);
+  get_data("txt/data02.txt", coordinate2, category2, &column, &row2);
+  get_data("txt/data03.txt", coordinate3, category3, &column, &row3);
+  get_data("txt/data04.txt", coordinate4, category4, &column, &row4);
 
   // 課題1：最近傍法を実装 & クラスタリング後のデータを保存
   nearest_neighbor(coordinate1, coordinate2, category1, category2, row1, row2);
@@ -52,11 +47,27 @@ int main(int argc, char *argv[])
   save_data("converted_txt/data02_k_nearest_even.txt", coordinate2, category2, &column, &row2);
 
   // 課題3：k-平均法を実装 & クラスタリング後のデータを保存
+  k_means(coordinate3, category3, row3, 7);
+  save_data("converted_txt/data03_k_means.txt", coordinate3, category3, &column, &row3);
 
-  // 全てのクラスタリング結果をプロット
-  plot_data("converted_txt/data02_k_nearest_even.txt");
-  plot_data("converted_txt/data02_k_nearest_odd.txt");
+  k_means(coordinate4, category4, row4, 8);
+  save_data("converted_txt/data04_k_means.txt", coordinate4, category4, &column, &row4);
+
+  // 分類前のデータをプロット
+  plot_data("txt/data02.txt");
+  plot_data("txt/data03.txt");
+  plot_data("txt/data04.txt");
+
+  // 最近傍法によるクラスタリング結果をプロット
   plot_data("converted_txt/data02_nearest.txt");
+
+  // k-最近傍法によるクラスタリング結果をプロット
+  plot_data("converted_txt/data02_k_nearest_odd.txt");
+  plot_data("converted_txt/data02_k_nearest_even.txt");
+
+  // k-平均法によるクラスタリング結果をプロット
+  plot_data("converted_txt/data03_k_means.txt");
+  plot_data("converted_txt/data04_k_means.txt");
 
 
   return 0;
@@ -140,21 +151,86 @@ void k_nearest_neighbor(double coordinate1[][DIMENSION], double coordinate2[][DI
 }
 
 
-// k-平均法（引数：分類済みデータの座標，未分類データの座標，分類済みデータのカテゴリ，未分類データのカテゴリ，分類済みデータの行数，未分類データの行数）
-void k_means(double coordinate1[][DIMENSION], double coordinate2[][DIMENSION], double category1[], double category2[], int row1, int row2)
+// k-平均法（引数：分類済みデータの座標，分類済みデータのカテゴリ，分類済みデータの行数，クラスタ数）
+void k_means(double coordinate[][DIMENSION], double category[], int row, int cluster)
 {
+  double init_gxA;
+  double init_gyA;
+  double init_gxB;
+  double init_gyB;
+  double distance_A;
+  double distance_B;
 
+
+  // クラスタA， クラスタBの重心(gx, gy)の初期値を適当に与える
+  double gxA = 1;
+  double gyA = 2;
+  double gxB = 3;
+  double gyB = 4;
+
+  // 重心が変化しなくなるまで繰り返し
+  while (init_gxA != gxA || init_gyA != gyA || init_gxB != gxB || init_gyB != gyB) {
+
+    // クラスタAとクラスタBに分類されるインスタンスの数
+    int cluster_A = 0;
+    int cluster_B = 0;
+
+    // クラスタAとクラスタBの重心
+    double sum_gxA = 0;
+    double sum_gyA = 0;
+    double sum_gxB = 0;
+    double sum_gyB = 0;
+
+    // 重心の初期値を記録
+    init_gxA = gxA;
+    init_gyA = gyA;
+    init_gxB = gxB;
+    init_gyB = gyB;
+
+    for (int i = 0; i < row; i++) {
+
+      // 各点の座標を記録
+      double x = coordinate[i][0];
+      double y = coordinate[i][1];
+
+      // 重心と各点のユークリッド距離を計算
+      distance_A = sqrt(pow(gxA - x, 2) + pow(gyA - y, 2));
+      distance_B = sqrt(pow(gxB - x, 2) + pow(gyB - y, 2));
+
+      // カテゴリをつける
+      if (distance_A < distance_B) category[i] = 1;
+      else category[i] = 2;
+    }
+
+    for (int i = 0; i < row; i++) {
+
+      // 重心をもとに各クラスタに分類
+      if (category[i] == 1) {
+        sum_gxA += coordinate[i][0];
+        sum_gyA += coordinate[i][1];
+        cluster_A++;
+      } else {
+        sum_gxB += coordinate[i][0];
+        sum_gyB += coordinate[i][1];
+        cluster_B++;
+      }
+    }
+
+    // 重心を求める
+    gxA = sum_gxA / cluster_A;
+    gyA = sum_gyA / cluster_A;
+    gxB = sum_gxB / cluster_B;
+    gyB = sum_gyB / cluster_B;
+  }
 }
 
 
 // データを読み込む（引数：受け取ったファイルデータ，座標情報，カテゴリ，列数，行数）
 void get_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row)
 {
-  FILE *fp;
+  FILE *fp = fopen(filename, "r");;
   char readline[256];
 
-
-  fp = fopen(filename, "r");
 
   int n = 0;
 
@@ -189,10 +265,7 @@ void get_data(char *filename, double coordinate[][DIMENSION], double category[],
 // データを保存（引数：受け取ったファイルデータ，座標情報，カテゴリ，列数，行数）
 void save_data(char *filename, double coordinate[][DIMENSION], double category[], int *column, int *row)
 {
-  FILE *fp;
-
-
-  fp = fopen(filename, "w");
+  FILE *fp = fopen(filename, "w");
 
   for (int i = 0; i < *row; i++) {
     for (int j = 0; j < *column; j++) {
@@ -208,10 +281,7 @@ void save_data(char *filename, double coordinate[][DIMENSION], double category[]
 // gnuplotでクラスタリング結果をプロット
 void plot_data(char *filename)
 {
-  FILE *gp;
-
-
-  gp = popen("gnuplot -persist", "w");
+  FILE *gp = popen("gnuplot -persist", "w");
 
   fprintf(gp, "reset\n");
   fprintf(gp, "unset label\n");
@@ -220,7 +290,7 @@ void plot_data(char *filename)
   fprintf(gp, "set title \"%s\"\n", filename);
   fprintf(gp, "set xlabel \"%s\"\n", "x");
   fprintf(gp, "set ylabel \"%s\"\n", "y");
-  fprintf(gp, "set terminal qt size 650, 600 font \"Verdana, 15\"\n");
+  fprintf(gp, "set terminal qt size 700, 400 font \"Verdana, 10\"\n");
   fprintf(gp, "set size ratio - 1\n");
   fprintf(gp, "set palette rgbformulae 22, 13, -31\n");
   fprintf(gp, "set pm3d map # no interpolation\n");
