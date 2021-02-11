@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 
 #define DIMENSION 2  // データ次元数
 #define MAXDATA 500  // 最大データ数
 
-double f_step(double u);
 void get_data(char *filename, double coordinate[][DIMENSION], int *column, int *row);
 void save_data(char *filename, double coordinate[][DIMENSION], double output[], int *column, int *row);
 void plot_data(char *filename);
 void plot_data_before(char *filename);
 void simple_perceptron(double coordinate[][DIMENSION], double output[], double weight[DIMENSION + 1], int n);
 void multilayer_perceptron(double coordinate[][DIMENSION], double output[], double weight_or[DIMENSION + 1], double weight_and[DIMENSION + 1], int n);
+double f_step(double u);
 
 
 int main(int argc, char *argv[])
