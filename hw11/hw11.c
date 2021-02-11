@@ -176,10 +176,10 @@ void k_means(double coordinate[][DIMENSION], double category[], int row, int clu
     int cluster_B = 0;
 
     // クラスタAとクラスタBの重心
-    double sum_gxA = 0;
-    double sum_gyA = 0;
-    double sum_gxB = 0;
-    double sum_gyB = 0;
+    double gravity_gxA = 0;
+    double gravity_gyA = 0;
+    double gravity_gxB = 0;
+    double gravity_gyB = 0;
 
     // 重心の初期値を記録
     init_gxA = gxA;
@@ -206,21 +206,21 @@ void k_means(double coordinate[][DIMENSION], double category[], int row, int clu
 
       // 重心をもとに各クラスタに分類
       if (category[i] == 1) {
-        sum_gxA += coordinate[i][0];
-        sum_gyA += coordinate[i][1];
+        gravity_gxA += coordinate[i][0];
+        gravity_gyA += coordinate[i][1];
         cluster_A++;
       } else {
-        sum_gxB += coordinate[i][0];
-        sum_gyB += coordinate[i][1];
+        gravity_gxB += coordinate[i][0];
+        gravity_gyB += coordinate[i][1];
         cluster_B++;
       }
     }
 
     // 重心を求める
-    gxA = sum_gxA / cluster_A;
-    gyA = sum_gyA / cluster_A;
-    gxB = sum_gxB / cluster_B;
-    gyB = sum_gyB / cluster_B;
+    gxA = gravity_gxA / cluster_A;
+    gyA = gravity_gyA / cluster_A;
+    gxB = gravity_gxB / cluster_B;
+    gyB = gravity_gyB / cluster_B;
   }
 }
 
