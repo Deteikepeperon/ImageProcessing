@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
   save_data("converted_txt/data02_k_nearest_even.txt", coordinate2, category2, &column, &row2);
 
   // 課題3：k-平均法を実装 & クラスタリング後のデータを保存
-  k_means(coordinate3, category3, row3, 7);
+  k_means(coordinate3, category3, row3, 2);
   save_data("converted_txt/data03_k_means.txt", coordinate3, category3, &column, &row3);
 
-  k_means(coordinate4, category4, row4, 8);
+  k_means(coordinate4, category4, row4, 2);
   save_data("converted_txt/data04_k_means.txt", coordinate4, category4, &column, &row4);
 
   // 分類前のデータをプロット
