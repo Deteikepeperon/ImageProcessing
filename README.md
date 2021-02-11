@@ -94,4 +94,26 @@
 
 [画像ラベリング](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw10)
 
+<br>
 
+## 画像認識の基礎
+
+- 最近近傍を実装せよ．
+  - 分類済みデータ:data_01.txt， 未分類データdata_02.txtとしてdata_02.txtを分類せよ．
+
+- k-最近傍法を実装せよ．
+  - 分類済みデータ:data_01.txt， 未分類データdata_02.txtとしてdata_02.txtを分類せよ．（k値に奇数と偶数を指定する）
+
+- k-平均法を実装せよ．
+  - データdata_03.txt, data_04.txtを分類せよ．
+
+[画像認識の基礎](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw11)
+
+<br>
+
+## ニューラルネットワークの基礎
+
+- 単純パーセプトロンを作成し，AND分度器とOR分度器を作成せよ．
+- 多層パーセプトロンを作成し，XOR分度器を作成せよ．
+
+[ニューラルネットワークの基礎](https://github.com/Deteikepeperon/ImageProcessing/tree/master/hw12)
